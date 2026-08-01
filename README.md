@@ -33,6 +33,12 @@ To answer the population, and infrastructure questions above, I also sourced and
 
 With the business questions and data source identified, I designed a pipeline to move from raw, hard-to-access government data to something a decision-maker could actually explore:
 
+<p align="center">
+  <img src="images/architecture.gif" width="1000" alt="Architecture">
+</p>
+
+
+
 
 
 
