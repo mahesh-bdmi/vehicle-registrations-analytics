@@ -37,8 +37,58 @@ With the business questions and data source identified, I designed a pipeline to
   <img src="images/architecture.gif" width="1000" alt="Architecture">
 </p>
 
+**Why this architecture?**
+- **Scraping on EC2, not locally** — the extraction needed to run reliably and repeatedly across hundreds of state/vehicle-class/year/fuel-type combinations without tying up a personal machine.
+- **S3 as a staging layer** — separates raw extraction from cleaned, analysis-ready data, and makes the pipeline reproducible.
+- **A star schema in SQL Server**, rather than flat files — because the business questions above all involve *slicing* data (by state, by category, by fuel type, by time) and joining against context tables (population, infrastructure). A proper dimensional model makes that fast and reliable rather than re-deriving joins in every notebook.
+- **Tableau as the final layer** — because the end consumer of this analysis is a stakeholder. The dashboard needed to let someone explore fuel-type market share by state and vehicle category without touching code.
 
+---
 
+## 4. What I Built
 
+| Stage | What it does |
+|---|---|
+| **Scraper** (`scraper.py`, `batch_aws.py`) | Simulates the VAHAN dashboard's AJAX calls to extract registration counts by state, vehicle class, fuel type, month, and year (Credits to Claude) |
+| **Storage** (S3) | Holds raw scrape output plus supporting reference data (population, charging stations) and cleaned outputs |
+| **Database** (SQL Server on AWS RDS) | Star schema with dimension tables (State, RTO, Vehicle Class, Fuel Type, Time) and fact tables (Registrations, Population, GSDP, Charging Stations, Policy Events) |
+| **Analysis** (Jupyter/pandas) | Cleaning, exploratory analysis, YoY growth trends, and correlation analysis against population/infrastructure/policy |
+| **Dashboard** (Tableau) | Interactive view of EV market share by state, vehicle category, and fuel type over time |
 
+---
 
+## 5. Key Decisions & Problem-Solving
+
+Real-world data work rarely goes as planned. A few examples of judgment calls made along the way:
+
+- **The dashboard's dropdowns are interdependent.** The available "X-Axis" options only populate correctly *after* the "Y-Axis" is selected — a quirk of the underlying framework. Solved by sequencing the AJAX calls to match the UI's actual behaviour rather than assuming static options
+- **Tableau's FIXED calculations were ignoring filters by design.** To get accurate market-share percentages that still respected state and vehicle-category filters, the right fix was promoting those filters to *context filters* — a deliberate modelling choice, not a Tableau bug. Finally, I removed the FIXED calculations and gave each chart it's own sheet and built the them independently
+- **Apparent data discrepancies between scrape runs turned out to be real** — the government source updates its own historical figures over time, which required distinguishing genuine pipeline errors from legitimate source-data changes
+
+---
+
+## 6. Skills This Project Demonstrates
+
+- **Business framing:** translating an open-ended question ("how's the EV market doing?") into concrete, measurable data requirements
+- **Data sourcing & extraction:** working with undocumented, dynamic web sources when no API exists
+- **Cloud infrastructure:** AWS EC2, S3, and RDS used together as a small but complete pipeline
+- **Data modelling:** dimensional (star schema) design for analytical querying
+- **Data cleaning & analysis:** Python/pandas for EDA and trend analysis
+- **Business intelligence:** Tableau dashboard design, including advanced calculation logic (LOD expressions, context filters)
+- **Debugging & engineering judgment:** diagnosing subtle bugs (resume logic, filter order, dynamic form dependencies) rather than working around symptoms
+
+---
+
+## 7. Status & Next Steps
+
+The pipeline is fully built end-to-end and the Tableau dashboard is complete.
+- Adding automated data-quality checks post-scrape
+- Extending the policy-event timeline for causal analysis of adoption spikes around subsidy announcements
+
+---
+
+## 📬 Contact
+
+Built by **Mahesh**. Happy to walk through any part of this pipeline.
+
+*Data sourced from the public [VAHAN Dashboard](https://vahan.parivahan.gov.in), Ministry of Road Transport & Highways, Government of India. This project is for educational/portfolio purposes and is not affiliated with the Government of India.*
