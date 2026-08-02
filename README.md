@@ -4,6 +4,8 @@ I built a full data pipeline — from raw government data to an interactive dash
 
 Tableau Dashboard - [Vehicle Registrations Analytics (VAHAN)](https://public.tableau.com/app/profile/maheshbdmi/viz/VehicleRegistrationsAnalyticsVAHAN/Summary)
 
+[Observations/Recommendations](README_results.md)
+
 ---
 
 ## 1. The Business Question
