@@ -49,6 +49,10 @@ With the business questions and data source identified, I designed a pipeline to
 
 ---
 
+<p align="center">
+  <img src="images/schema.png" width="1000" alt="schema">
+</p>
+
 ## 4. What I Built
 
 | Stage | What it does |
