@@ -2,6 +2,8 @@
 
 I built a full data pipeline — from raw government data to an interactive dashboard — to answer a real business question: *where and how fast is India's EV market actually growing?* This project demonstrates the full analytics lifecycle: problem framing, data sourcing, engineering, modelling, and stakeholder-ready visualization.
 
+Tableau Dashboard - [Vehicle Registrations Analytics (VAHAN)](https://public.tableau.com/app/profile/maheshbdmi/viz/VehicleRegistrationsAnalyticsVAHAN/Summary)
+
 ---
 
 ## 1. The Business Question
