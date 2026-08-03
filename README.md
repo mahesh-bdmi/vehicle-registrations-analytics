@@ -63,6 +63,51 @@ With the business questions and data source identified, I designed a pipeline to
 | **Analysis** (Jupyter/pandas) | Cleaning, exploratory analysis, YoY growth trends, and correlation analysis against population/infrastructure/policy |
 | **Dashboard** (Tableau) | Interactive view of EV market share by state, vehicle category, and fuel type over time |
 
+## 🧰 Tech Stack
+
+| Layer | Tools |
+|---|---|
+| **Scraping** | Python, `requests` (PrimeFaces AJAX/xhtml protocol simulation) |
+| **Compute** | AWS EC2 (Amazon Linux 2023, t3.micro) |
+| **Storage** | AWS S3 (raw + processed data) |
+| **Database** | AWS RDS — SQL Server Express, T-SQL, `pyodbc` (ODBC Driver 18) |
+| **Analysis** | Python (pandas), Jupyter Notebooks |
+| **Visualization** | Tableau |
+
+## 🔄 Pipeline Details
+
+### 1. Scraping (`scraper.py`, `batch_aws.py`)
+The VAHAN dashboard is built on PrimeFaces, which drives its dropdowns and tables via AJAX calls rather than standard page loads. `scraper.py` reverse-engineers this to programmatically:
+- Select **Y-Axis** and **X-Axis** dimensions (e.g., State, RTO, Vehicle Class, Fuel Type)
+- Iterate across **month**, **year**, and **fuel type** filters
+- Handle CLI arguments: `--yaxis`, `--xaxis`, `--month`, `--fuel`, `--year`
+
+`batch_aws.py` orchestrates large-scale runs across the full combination space (state × RTO × vehicle class × month × year) on an EC2 instance, with resumability so long-running jobs can survive interruptions.
+
+**Key engineering detail:** Y-Axis must be selected via AJAX *before* validating `--xaxis`, since the available X-Axis options are dynamically refreshed based on the Y-Axis selection — a quirk of how PrimeFaces re-renders the form.
+
+### 2. Storage (S3)
+- Raw scraped output → S3 (partitioned by scrape run)
+- Supporting reference data ( population, charging station snapshots, policy events) → `supporting_data/`
+- Cleaned, analysis-ready outputs → `processed/`
+
+### 3. Database (SQL Server on RDS — `vahan-db`)
+A **star schema** was designed to support flexible slicing of registrations by state, vehicle category, fuel type, and time:
+- **Dimension tables:** State, RTO, Vehicle Class, Fuel Type, Time
+- **Fact tables:** Registrations, Population, Charging Stations, Policy Events
+
+Data is loaded via `pyodbc` (ODBC Driver 18). **Note:** SQL Server enforces a 2,100-parameter-per-statement limit, so bulk inserts use a conservative `chunksize` (~200 rows) to avoid hitting this cap.
+
+### 4. Analysis (Jupyter Notebooks)
+- **Notebook 1 — Cleaning & EDA:** Deliberately kept simple and readable (optimized for interview walk-throughs over exhaustive exploration)
+- **Notebook 2 — Deep Analysis:** Trend analysis, YoY growth, state-level EV penetration, correlation with population/charging infrastructure
+
+### 5. Visualization (Tableau)
+Interactive dashboard showing **fuel type market share trends** by vehicle category and state, including:
+- EV share of total registrations over time
+- State-level comparisons
+- Category-level breakdowns (2W / 3W / 4W / Commercial, etc.)
+
 ---
 
 ## 5. Key Decisions & Problem-Solving
